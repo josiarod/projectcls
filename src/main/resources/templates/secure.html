@@ -5,7 +5,12 @@
     <title>Title</title>
 </head>
 <body>
-<h2>Insecure Page</h2>
-<a href="/secure">Secure Page</a>
+
+<h3>Secure Page</h3>
+<a href="/logout">logout</a>
+<h4>email</h4>
+<p th:text="${user.email}"></p><br/>
+<h4>last name</h4>
+<p th:text="${user.lastName}"></p>
 </body>
 </html>
