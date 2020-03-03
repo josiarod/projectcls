@@ -28,9 +28,8 @@ public class HomeController {
         return "registration";
     }
 
-    @PostMapping("register")
-    public String processRegistrationPage(@Valid
-                           @ModelAttribute("user") User user, BindingResult result,
+    @PostMapping("/register")
+    public String processRegistrationPage(@Valid @ModelAttribute("user") User user, BindingResult result,
                            Model model) {
                       model.addAttribute("user", user);
                       if (result.hasErrors())
@@ -64,7 +63,7 @@ public class HomeController {
 //    }
 
 
-
+    @RequestMapping("/secure")
     public String secure(Principal principal, Model model){
         String username = principal.getName();
         model.addAttribute("user", userRepository.findByUsername(username));
