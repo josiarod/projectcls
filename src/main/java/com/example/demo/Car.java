@@ -10,12 +10,11 @@ public class Car {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
-
-
     private String manufacturer;
     private String model;
     private String year;
     private  double MSRP;
+    private String picture;
 
     public String getPicture() {
         return picture;
@@ -25,12 +24,16 @@ public class Car {
         this.picture = picture;
     }
 
-    private String picture;
 
 
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
 
     public long getId() {
@@ -79,5 +82,13 @@ public class Car {
 
     public void setCategory(Category category) {
         this.category = category;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

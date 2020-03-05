@@ -25,7 +25,7 @@
 
 
 
-         <div th:each="car: ${category.cars}">
+         <div th:each="car: ${cars}"><!-- -->
             <div class="card">
 
             <div class="card-block">
@@ -46,9 +46,12 @@
                     </div>
 
                         <td>
-                            <a th:href="@{/update/{id}(id=${car.id})}" class="btn btn-primary" >Update</a>
                             <a th:href="@{/detail/{id}(id=${car.id})}" class="btn btn-primary" >Details</a>
-                            <a th:href="@{/delete/{id}(id=${car.id})}" class="btn btn-primary">Delete</a>
+
+                            <div th:if="${car.user.getId()} == ${car_user_id}">
+                            <a th:href="@{/update/{id}(id=${car.id})}" class="btn btn-primary" >Update</a>
+                                <a th:href="@{/delete/{id}(id=${car.id})}" class="btn btn-primary">Delete</a>
+                            </div>
                         </td></tr>
                         <p style="color: blue">--------------------------------------</p>
 

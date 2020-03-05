@@ -2,6 +2,7 @@ package com.example.demo;
 
 import com.cloudinary.utils.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -15,10 +16,8 @@ import java.util.Map;
 
 @Controller
 public class HomeController {
-
     @Autowired
     private UserService userService;
-
     @Autowired
     UserRepository userRepository;
 
@@ -47,8 +46,19 @@ public class HomeController {
 
 
     @RequestMapping("/")
-    public String index(){
-        return "index";
+    public String index(Model model, Principal principal, Authentication authentication)
+    {
+        model.addAttribute("categories", carRepository.findAll());
+        model.addAttribute("cars", carRepository.findAll());
+        String username = null;
+        try {
+            username = principal.getName();
+            model.addAttribute("car_user_id", userRepository.findByUsername(principal.getName()).getId());
+            return "index1";
+        } catch (Exception e){
+            model.addAttribute("car_user_id", 0);
+            return "index1";
+        }
     }
 
     @RequestMapping("/login")
@@ -56,7 +66,8 @@ public class HomeController {
         return "login";
     }
 
-
+    @RequestMapping("/admin")
+    public String admin() {return "admin";}
 
 //    @RequestMapping("/secure")
 //    public String admin(){
@@ -109,32 +120,50 @@ public class HomeController {
 
 
     @GetMapping("/addCar")
-    public String addCar(Model model) {
-        model.addAttribute("categories", categoryRepository.findAll());
+    public String addCar(Model model, Principal principal) {
         model.addAttribute("car", new Car());
+        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("user_id",userRepository.findByUsername(principal.getName()).getId());
         return "carform";
     }
 
 
     @PostMapping("/processCar")
-    public String processCar(@ModelAttribute Car car,
-                             @RequestParam("file") MultipartFile file) {
-        if (file.isEmpty()) {
-            carRepository.save(car);
-            return "redirect:/index1";
+    public String processCar(@Valid @ModelAttribute Car car, BindingResult result,
+                             @RequestParam("category") long id, @RequestParam("file") MultipartFile file,
+                             @RequestParam("car_user_id") long car_user_id, Principal principal) {
+        if (result.hasErrors()) {
+            return "carform";
+        }
 
+        if (file.isEmpty()) {
+//            carRepository.save(car);
+//            return "redirect:/index1";
+
+        } else {
+            try {
+                Map uploadResult = cloudc.upload(file.getBytes(),
+                        ObjectUtils.asMap("resourcetype", "auto"));
+                car.setPicture(uploadResult.get("url").toString());
+                carRepository.save(car);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return "redirect:/addcar";
+            }
         }
-        try {
-            Map uploadResult = cloudc.upload(file.getBytes(),
-                    ObjectUtils.asMap("resourcetype", "auto"));
-            car.setPicture(uploadResult.get("url").toString());
-            carRepository.save(car);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "redirect:/processCar";
-        }
+//        carRepository.save(car);
+//        return "redirect:/index1";
+
+
+
+        User user = userRepository.findById(car_user_id).get();
+        car.setUser(user);
+
+        Category category = categoryRepository.findById(id).get();
+        car.setCategory(category);
         carRepository.save(car);
         return "redirect:/index1";
+
     }
 
 
@@ -143,14 +172,20 @@ public class HomeController {
     public String showCar(@PathVariable("id") long id, Model model)
     {
         model.addAttribute("car", carRepository.findById(id).get());
+        model.addAttribute("categories", categoryRepository.findAll());
         return "show";
     }
 
     @RequestMapping("/update/{id}")
     public String updateCar(@PathVariable("id") long id,
-                            Model model   ){
-        model.addAttribute("categories", categoryRepository.findAll());
+                            Model model, Principal principal ){
         model.addAttribute("car", carRepository.findById(id).get());
+        model.addAttribute("user_id", userRepository.findByUsername(principal.getName()).getId());
+        Car car = carRepository.findById(id).get();
+        model.addAttribute("car", car);
+
+        model.addAttribute("categories", categoryRepository.findAll());
+
         return "carform";
     }
 
@@ -167,6 +202,8 @@ public class HomeController {
     public String showCategory(@PathVariable("id") long id, Model model)
     {
         model.addAttribute("category", categoryRepository.findById(id).get());
+        model.addAttribute("cars", carRepository.findAll());
+        model.addAttribute("categories", categoryRepository.findAll());
         return "showcategory";
     }
 
